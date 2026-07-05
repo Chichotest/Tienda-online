@@ -109,25 +109,26 @@ export default function ShoeVisualizer({
               className="w-full h-full object-cover rounded-[24px] shadow-sm transition-transform duration-500 hover:scale-[1.02]"
               onError={(e) => {
                 const img = e.currentTarget;
-                const currentSrc = img.src;
+                const attempt = img.getAttribute("data-attempt");
+                if (attempt === "failed") return;
                 try {
+                  const currentSrc = img.src;
                   const urlPath = new URL(currentSrc, window.location.origin).pathname;
                   if (urlPath.startsWith("/images/")) {
                     const extensions = ["jpeg", "jpg", "png", "webp"];
-                    const attemptAttr = img.getAttribute("data-attempt");
-                    const attempt = attemptAttr ? parseInt(attemptAttr) : 0;
+                    const currentAttemptIdx = attempt ? parseInt(attempt) : 0;
                     
-                    if (attempt < extensions.length) {
-                      img.setAttribute("data-attempt", (attempt + 1).toString());
+                    if (currentAttemptIdx < extensions.length) {
+                      img.setAttribute("data-attempt", (currentAttemptIdx + 1).toString());
                       const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
                       const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
                       const currentExt = extMatch ? extMatch[1].toLowerCase() : "";
                       
-                      let targetExt = extensions[attempt];
+                      let targetExt = extensions[currentAttemptIdx];
                       if (targetExt === currentExt) {
-                        const nextIdx = (attempt + 1) % extensions.length;
+                        const nextIdx = (currentAttemptIdx + 1) % extensions.length;
                         targetExt = extensions[nextIdx];
-                        img.setAttribute("data-attempt", (attempt + 2).toString());
+                        img.setAttribute("data-attempt", (currentAttemptIdx + 2).toString());
                       }
                       
                       img.src = `${baseName}.${targetExt}`;
@@ -137,7 +138,7 @@ export default function ShoeVisualizer({
                 } catch (err) {
                   console.warn("Error resolving image fallback extension:", err);
                 }
-                img.onerror = null;
+                img.setAttribute("data-attempt", "failed");
                 img.src = "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&h=450&q=80";
               }}
             />
