@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ShoppingBag, 
@@ -12,7 +12,8 @@ import {
   Mail, 
   Instagram, 
   HelpCircle,
-  Scissors
+  Scissors,
+  Camera
 } from "lucide-react";
 
 import { Product, CartItem, AICreatedDesign } from "./types";
@@ -20,6 +21,7 @@ import ShoeVisualizer from "./components/ShoeVisualizer";
 import Catalog from "./components/Catalog";
 import AICoCreator from "./components/AICoCreator";
 import AIGiftAdvisor from "./components/AIGiftAdvisor";
+import RetouchStudio from "./components/RetouchStudio";
 import Cart from "./components/Cart";
 import CheckoutModal from "./components/CheckoutModal";
 
@@ -34,6 +36,8 @@ const ARTISAN_PRODUCTS: Product[] = [
     features: ["Bordado tridimensional", "Talla a elegir (36-44)", "Iniciales personalizadas en hilo de oro", "Lazada de cinta organza roja"],
     isCustomizable: true,
     imageAlt: "Zapatillas altas blancas bordadas a mano con girasoles tridimensionales y cordón de cinta de organza roja.",
+    image: "/images/zapatillas_girasoles.png",
+    fallbackImage: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#fef3c7", // soft light gold yellow background
     badge: "Más Vendido",
     details: "Nuestra creación insignia. Cada par requiere más de 12 horas de meticuloso bordado con hilos de seda de alta calidad. Los girasoles se bordan en relieve tridimensional, creando pétalos vivos sobre la lona blanca. Se entregan con cordones intercambiables (cinta de organza carmesí y cordón clásico de algodón)."
@@ -48,6 +52,8 @@ const ARTISAN_PRODUCTS: Product[] = [
     features: ["Ajustable a cualquier muñeca", "Broche de presión doble", "Bordes pulidos a mano con cera de abejas"],
     isCustomizable: false,
     imageAlt: "Brazalete de cuero marrón con un gran aro plateado metálico en el centro.",
+    image: "/images/brazalete_cuero.png",
+    fallbackImage: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#f5ebe0", // soft warm leather beige background
     badge: "Pieza Única",
     details: "Un brazalete de espíritu minimalista y rústico. Cortamos y teñimos a mano cada tira de cuero de curtido vegetal en tono castaño profundo. El contraste entre el tacto orgánico del cuero y la frialdad industrial del gran anillo central de plata pulida crea una pieza de joyería versátil y atemporal."
@@ -55,16 +61,18 @@ const ARTISAN_PRODUCTS: Product[] = [
   {
     id: "pendientes_labios",
     name: "Pendientes 'Labios de Carmín'",
-    description: "Pendientes colgantes extravagantes de labios rojos mordiéndose con dientes blancos, modelados en resina y ganchos de plata.",
+    description: "Pendientes colgantes de labios rojos mordiéndose con dientes blancos, modelados artesanalmente y ganchos de plata.",
     price: 18,
     category: "pendientes",
-    materials: ["Resina acrílica brillante", "Pigmentos orgánicos de carmín", "Ganchos de plata de ley 925"],
+    materials: ["Resina brillante esmaltada", "Pigmentos intensos", "Ganchos de plata de ley 925"],
     features: ["Ultra ligeros", "Brillo de esmalte vitrificado", "Hipoalergénicos"],
     isCustomizable: false,
     imageAlt: "Pendientes en forma de labios rojos sensuales y dientes blancos mordiendo, con ganchos plateados.",
+    image: "/images/labios_rojos.png",
+    fallbackImage: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#ffe4e6", // soft red-pink background
     badge: "Divertido",
-    details: "Pendientes atrevidos, pop y muy originales. Modelados a mano para conseguir una textura carnosa y expresiva, esmaltados con una capa de resina de alto brillo que simula carmín mojado. Un complemento divertido y único que eleva cualquier estilo cotidiano."
+    details: "Pendientes atrevidos, pop y muy originales. Modelados a mano para conseguir una textura carnosa y expresiva, esmaltados con una capa de alto brillo que simula carmín mojado. Un complemento divertido y único que eleva cualquier estilo cotidiano."
   },
   {
     id: "pendientes_espinas",
@@ -76,6 +84,8 @@ const ARTISAN_PRODUCTS: Product[] = [
     features: ["Estilo gótico sofisticado", "Efecto oxidado vintage", "Líneas pulidas suaves al tacto"],
     isCustomizable: false,
     imageAlt: "Pendientes metálicos con forma de corazón simulando alambre de espino.",
+    image: "/images/corazon_alambre.png",
+    fallbackImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#f4f4f5", // soft cool gray
     badge: "Novedad",
     details: "Artesanía metálica inspirada en la joyería gótica y de espinas. Moldeamos cada corazón usando hilos de metal de alta flexibilidad que trenzamos para simular alambre de espino, puliendo minuciosamente cada punta para que sea cómoda de vestir sin perder su aspecto rebelde."
@@ -90,6 +100,8 @@ const ARTISAN_PRODUCTS: Product[] = [
     features: ["Relieve de fundición artesanal", "Símbolo protector tradicional", "Estuche de madera de regalo"],
     isCustomizable: false,
     imageAlt: "Pendientes de plata circulares con el símbolo del trisquel celta grabado.",
+    image: "/images/trisquel_celta.png",
+    fallbackImage: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#eaf2f8", // light sky grey-blue
     details: "Un amuleto celta lleno de historia. Elaborados mediante fundición a la cera perdida en plata de ley 925, envejecidos con pátina oscura en las ranuras para acentuar el relieve tridimensional de las espirales. El trisquel representa la evolución espiritual, la conexión con la naturaleza y el equilibrio vital."
   },
@@ -103,6 +115,8 @@ const ARTISAN_PRODUCTS: Product[] = [
     features: ["Asimetría a elegir", "Estampados de alta definición pintados a mano", "Extremadamente cómodos"],
     isCustomizable: true,
     imageAlt: "Expositor lleno de decenas de pendientes divertidos colgando de una puerta.",
+    image: "/images/taller_creativo.png",
+    fallbackImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#fcf6f5", // pastel white peach
     badge: "Taller Creativo",
     details: "Forman parte de nuestra colección de pendientes extravagantes ilustrados a mano. Elige tu par asimétrico preferido para combinar figuras icónicas: desde discos de vinilo retro hasta una ouija planchette de aire místico. Perfectos para regalar a coleccionistas de complementos curiosos."
@@ -110,7 +124,8 @@ const ARTISAN_PRODUCTS: Product[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"coleccion" | "taller" | "regalos">("coleccion");
+  const [activeTab, setActiveTab] = useState<"coleccion" | "taller" | "regalos" | "retoque">("coleccion");
+  const [products, setProducts] = useState<Product[]>(ARTISAN_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -120,6 +135,34 @@ export default function App() {
   const [vizLacesType, setVizLacesType] = useState<"organza" | "algodon" | "hemp" | "satin">("organza");
   const [vizEmbTheme, setVizEmbTheme] = useState<"girasoles" | "mar" | "gotico" | "estrellas" | "ninguno">("girasoles");
   const [vizInitials, setVizInitials] = useState("");
+
+  // Listen for real image uploads to update the catalog state in real-time
+  useEffect(() => {
+    const handleImageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ productId: string; url: string }>;
+      const { productId, url } = customEvent.detail;
+      setProducts((prev) => 
+        prev.map((prod) => {
+          if (
+            prod.id === productId || 
+            (productId === "brazalete_cuero" && prod.id === "pulsera_tierra") ||
+            (productId === "taller_creativo" && prod.id === "pendientes_fantasia")
+          ) {
+            return {
+              ...prod,
+              image: `${url}?t=${Date.now()}`
+            };
+          }
+          return prod;
+        })
+      );
+    };
+
+    window.addEventListener("product-image-updated", handleImageUpdate);
+    return () => {
+      window.removeEventListener("product-image-updated", handleImageUpdate);
+    };
+  }, []);
 
   // Handler: Add standard product to cart
   const handleAddProductToCart = (product: Product, size?: string, customText?: string) => {
@@ -291,6 +334,13 @@ export default function App() {
               Taller de Costura IA
             </button>
             <button 
+              onClick={() => setActiveTab("retoque")} 
+              className={`flex items-center gap-1.5 hover:text-natural-accent border-b-2 pb-1 transition-all duration-200 cursor-pointer ${activeTab === "retoque" ? "text-natural-accent border-natural-accent font-bold" : "border-transparent"}`}
+            >
+              <Camera className="w-3.5 h-3.5 text-natural-accent" />
+              Estudio de Retoque
+            </button>
+            <button 
               onClick={() => setActiveTab("regalos")} 
               className={`flex items-center gap-1.5 hover:text-natural-accent border-b-2 pb-1 transition-all duration-200 cursor-pointer ${activeTab === "regalos" ? "text-natural-accent border-natural-accent font-bold" : "border-transparent"}`}
             >
@@ -363,7 +413,7 @@ export default function App() {
         </section>
 
         {/* Tab Controls for Mobile devices */}
-        <div className="md:hidden grid grid-cols-3 gap-1 bg-natural-border/40 p-1 rounded-2xl">
+        <div className="md:hidden grid grid-cols-4 gap-1 bg-natural-border/40 p-1 rounded-2xl">
           <button
             onClick={() => setActiveTab("coleccion")}
             className={`text-[10px] uppercase tracking-wider py-2.5 rounded-xl text-center font-sans font-bold transition-all ${activeTab === "coleccion" ? "bg-white text-natural-accent shadow-sm" : "text-[#8a8a7a]"}`}
@@ -374,7 +424,13 @@ export default function App() {
             onClick={() => setActiveTab("taller")}
             className={`text-[10px] uppercase tracking-wider py-2.5 rounded-xl text-center font-sans font-bold flex items-center justify-center gap-1 transition-all ${activeTab === "taller" ? "bg-white text-natural-accent shadow-sm" : "text-[#8a8a7a]"}`}
           >
-            <Sparkles className="w-3 h-3 text-natural-accent" /> Taller IA
+            <Sparkles className="w-3 h-3 text-natural-accent" /> Taller
+          </button>
+          <button
+            onClick={() => setActiveTab("retoque")}
+            className={`text-[10px] uppercase tracking-wider py-2.5 rounded-xl text-center font-sans font-bold flex items-center justify-center gap-1 transition-all ${activeTab === "retoque" ? "bg-white text-natural-accent shadow-sm" : "text-[#8a8a7a]"}`}
+          >
+            <Camera className="w-3 h-3 text-natural-accent" /> Retoque
           </button>
           <button
             onClick={() => setActiveTab("regalos")}
@@ -399,7 +455,7 @@ export default function App() {
                   <h3 className="font-serif text-xl font-bold text-natural-dark">Catálogo de Joyería & Calzado de Autor</h3>
                   <p className="text-xs text-[#8a8a7a]">Selección exclusiva de nuestras piezas elaboradas con metales nobles, cuero y costuras delicadas.</p>
                 </div>
-                <Catalog products={ARTISAN_PRODUCTS} onAddToCart={handleAddProductToCart} />
+                <Catalog products={products} onAddToCart={handleAddProductToCart} />
               </div>
             </motion.div>
           )}
@@ -490,6 +546,18 @@ export default function App() {
               className="max-w-2xl mx-auto"
             >
               <AIGiftAdvisor onAddCustomSuggested={handleAddGiftSuggestedToCart} />
+            </motion.div>
+          )}
+
+          {activeTab === "retoque" && (
+            <motion.div
+              key="retoque-tab"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+            >
+              <RetouchStudio />
             </motion.div>
           )}
         </AnimatePresence>

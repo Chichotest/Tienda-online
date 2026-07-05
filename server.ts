@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -9,7 +10,7 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
 
 // Lazy-loaded Gemini AI client
 let aiClient: GoogleGenAI | null = null;
@@ -294,6 +295,78 @@ Recomienda de forma personalizada qué tipo de pieza regalar de nuestro taller a
       ...mock,
       errorFeedback: "El consejero de IA directo está ocupado puliendo hilos. Te mostramos nuestra propuesta recomendada preestablecida."
     });
+  }
+});
+
+// 3. API: Image Upload Endpoint (To save user's custom photos to the catalog)
+app.post("/api/upload-image", (req, res) => {
+  const { productId, base64Data } = req.body;
+  if (!productId || !base64Data) {
+    return res.status(400).json({ error: "Faltan datos de 'productId' o 'base64Data'." });
+  }
+
+  let filename = "";
+  switch (productId) {
+    case "zapatillas_girasoles":
+      filename = "zapatillas_girasoles.png";
+      break;
+    case "pulsera_tierra":
+    case "brazalete_cuero":
+      filename = "brazalete_cuero.png";
+      break;
+    case "pendientes_labios":
+    case "labios_rojos":
+      filename = "labios_rojos.png";
+      break;
+    case "pendientes_espinas":
+    case "corazon_alambre":
+      filename = "corazon_alambre.png";
+      break;
+    case "pendientes_trisquel":
+    case "trisquel_celta":
+      filename = "trisquel_celta.png";
+      break;
+    case "pendientes_fantasia":
+    case "taller_creativo":
+      filename = "taller_creativo.png";
+      break;
+    default:
+      return res.status(400).json({ error: "Identificador de producto no reconocido." });
+  }
+
+  try {
+    const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    let buffer;
+    if (matches && matches.length === 3) {
+      buffer = Buffer.from(matches[2], "base64");
+    } else {
+      buffer = Buffer.from(base64Data, "base64");
+    }
+
+    const publicImagesDir = path.join(process.cwd(), "public", "images");
+    const distImagesDir = path.join(process.cwd(), "dist", "images");
+
+    if (!fs.existsSync(publicImagesDir)) {
+      fs.mkdirSync(publicImagesDir, { recursive: true });
+    }
+    
+    const publicPath = path.join(publicImagesDir, filename);
+    fs.writeFileSync(publicPath, buffer);
+    console.log(`[Upload] Image saved to public: ${publicPath}`);
+
+    if (fs.existsSync(path.join(process.cwd(), "dist"))) {
+      if (!fs.existsSync(distImagesDir)) {
+        fs.mkdirSync(distImagesDir, { recursive: true });
+      }
+      const distPath = path.join(distImagesDir, filename);
+      fs.writeFileSync(distPath, buffer);
+      console.log(`[Upload] Image saved to dist: ${distPath}`);
+    }
+
+    return res.json({ success: true, url: `/images/${filename}` });
+  } catch (err: any) {
+    console.error("Error saving uploaded image:", err);
+    return res.status(500).json({ error: "No se pudo guardar la imagen en el servidor: " + err.message });
   }
 });
 

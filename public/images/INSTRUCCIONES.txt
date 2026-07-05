@@ -1,0 +1,20 @@
+HOLA NARCISO,
+
+¡He dejado todo preparado para que puedas usar tus fotos reales en la tienda!
+
+Para ver tus fotos reales de los productos en la web, solo tienes que subir tus archivos de imagen a esta carpeta (/public/images/) con los siguientes nombres exactos:
+
+1. Zapatillas de Girasoles: "zapatillas_girasoles.png" o "zapatillas_girasoles.jpg"
+2. Brazalete de Cuero: "brazalete_cuero.png" o "brazalete_cuero.jpg"
+3. Pendientes de Labios de Carmín: "labios_rojos.png" o "labios_rojos.jpg"
+4. Pendientes de Corazón de Espinas: "corazon_alambre.png" o "corazon_alambre.jpg"
+5. Pendientes de Trisquel Ancestral: "trisquel_celta.png" o "trisquel_celta.jpg"
+6. Pendientes Quirky (Expositor): "taller_creativo.png" o "taller_creativo.jpg"
+
+¿Cómo puedes subirlas?
+- En el panel izquierdo de la pantalla de AI Studio, verás el explorador de archivos.
+- Navega hasta la carpeta 'public/images/' (si no la ves, puedes recargar el explorador).
+- Haz clic derecho sobre la carpeta 'images' o usa la opción de subir archivos para arrastrar tus imágenes reales directamente ahí con los nombres indicados.
+- ¡Al instante la web reemplazará las fotos de ejemplo de internet por tus fotos artesanales reales de tus maravillosos diseños!
+
+¡Tus fotos tienen una pinta estupenda y harán que tu tienda sea 100% auténtica!

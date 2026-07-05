@@ -8,6 +8,8 @@ export interface Product {
   features: string[];
   isCustomizable: boolean;
   imageAlt: string;
+  image?: string;
+  fallbackImage?: string;
   // Visual properties for mock representation since generated image quota is reached
   colorAccent: string;
   badge?: string;

@@ -18,6 +18,24 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
   const [sneakerInitials, setSneakerInitials] = useState("");
   const [heartColor, setHeartColor] = useState("plata");
 
+  // Functional & Visual Filters
+  const [priceFilter, setPriceFilter] = useState<"all" | "under30" | "under60" | "over60">("all");
+  const [onlyCustomizable, setOnlyCustomizable] = useState(false);
+  const [photoFilter, setPhotoFilter] = useState<"none" | "warm" | "vintage" | "soft">("none");
+
+  const getFilterStyle = (filter: string) => {
+    switch (filter) {
+      case "warm":
+        return "sepia(0.2) saturate(1.2) contrast(1.02) brightness(0.98)";
+      case "vintage":
+        return "sepia(0.35) contrast(0.9) brightness(0.95) saturate(0.85)";
+      case "soft":
+        return "contrast(1.08) brightness(1.02) saturate(1.05)";
+      default:
+        return "none";
+    }
+  };
+
   const categories = [
     { id: "todos", label: "Colección Completa" },
     { id: "zapatillas", label: "Zapatillas Personalizadas" },
@@ -28,6 +46,18 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
   const filteredProducts = activeCategory === "todos"
     ? products
     : products.filter(p => p.category === activeCategory);
+
+  const finalFilteredProducts = filteredProducts.filter((product) => {
+    // Price filter
+    if (priceFilter === "under30" && product.price >= 30) return false;
+    if (priceFilter === "under60" && (product.price < 30 || product.price >= 60)) return false;
+    if (priceFilter === "over60" && product.price < 60) return false;
+
+    // Customizable filter
+    if (onlyCustomizable && !product.isCustomizable) return false;
+
+    return true;
+  });
 
   const handleOpenDetail = (product: Product) => {
     setSelectedProduct(product);
@@ -128,26 +158,88 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
 
   return (
     <div id="catalog-section" className="space-y-6 font-serif">
-      {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-natural-border pb-4">
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id as any)}
-            className={`text-xs px-5 py-2.5 rounded-full font-sans transition-all duration-200 cursor-pointer border ${
-              activeCategory === cat.id
-                ? "bg-natural-accent text-[#f5f5f0] border-natural-accent font-bold shadow-sm"
-                : "bg-white text-[#8a8a7a] border-natural-border hover:bg-natural-bg hover:text-natural-accent"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+      {/* Category Tabs & Interactive Filters */}
+      <div className="space-y-4 border-b border-natural-border pb-6">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id as any)}
+              className={`text-xs px-5 py-2.5 rounded-full font-sans transition-all duration-200 cursor-pointer border ${
+                activeCategory === cat.id
+                  ? "bg-natural-accent text-[#f5f5f0] border-natural-accent font-bold shadow-sm"
+                  : "bg-white text-[#8a8a7a] border-natural-border hover:bg-natural-bg hover:text-natural-accent"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filters Panel with Photographic & Functional controls */}
+        <div className="bg-natural-card-bg/60 border border-natural-border p-4 rounded-[24px] flex flex-wrap gap-4 items-center justify-between">
+          {/* Functional Filters (Price & Customizable) */}
+          <div className="flex flex-wrap gap-3 items-center text-xs font-sans">
+            <span className="text-[#8a8a7a] font-bold uppercase tracking-widest text-[9px]">Filtrar por:</span>
+            
+            {/* Price Filter dropdown */}
+            <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-natural-border shadow-2xs">
+              <span className="text-[#8a8a7a] text-[10px] font-medium">Precio:</span>
+              <select 
+                value={priceFilter}
+                onChange={(e) => setPriceFilter(e.target.value as any)}
+                className="bg-transparent font-bold text-natural-dark focus:outline-none cursor-pointer text-[10px]"
+              >
+                <option value="all">Todos los precios</option>
+                <option value="under30">Menos de 30€</option>
+                <option value="under60">Menos de 60€</option>
+                <option value="over60">Más de 60€</option>
+              </select>
+            </div>
+
+            {/* Customizable toggle */}
+            <button
+              onClick={() => setOnlyCustomizable(!onlyCustomizable)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] transition-all cursor-pointer shadow-2xs ${
+                onlyCustomizable 
+                  ? "bg-natural-accent text-white border-natural-accent font-bold" 
+                  : "bg-white text-natural-text border-natural-border hover:bg-natural-bg"
+              }`}
+            >
+              <span>✨ Solo Personalizables</span>
+            </button>
+          </div>
+
+          {/* Visual/Photographic Effects Filters */}
+          <div className="flex items-center gap-2 text-xs font-sans">
+            <span className="text-[#8a8a7a] font-bold uppercase tracking-widest text-[9px]">Filtro de Foto:</span>
+            <div className="flex bg-white p-1 rounded-full border border-natural-border gap-1 shadow-2xs">
+              {[
+                { id: "none", label: "Original" },
+                { id: "warm", label: "Cálido 🔥" },
+                { id: "vintage", label: "Vintage 📜" },
+                { id: "soft", label: "Estudio 💡" }
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setPhotoFilter(f.id as any)}
+                  className={`px-2.5 py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer ${
+                    photoFilter === f.id
+                      ? "bg-natural-accent text-white shadow-3xs"
+                      : "text-[#8a8a7a] hover:bg-natural-bg"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Grid of Products */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
+        {finalFilteredProducts.map((product) => (
           <motion.div
             layout
             key={product.id}
@@ -156,12 +248,28 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
             className="group bg-white border border-natural-border rounded-[32px] p-5 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300"
           >
             {/* Visual Header */}
-            <div className="relative mb-4 overflow-hidden rounded-2xl">
-              {renderProductFallbackGraphic(product)}
+            <div className="relative mb-4 overflow-hidden rounded-[24px] aspect-[4/3] bg-stone-100">
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.imageAlt}
+                  referrerPolicy="no-referrer"
+                  style={{ filter: getFilterStyle(photoFilter) }}
+                  className="w-full h-full object-cover rounded-[24px] transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    if (product.fallbackImage) {
+                      e.currentTarget.src = product.fallbackImage;
+                    }
+                  }}
+                />
+              ) : (
+                renderProductFallbackGraphic(product)
+              )}
               
               {/* Product Badge */}
               {product.badge && (
-                <span className="absolute top-3 left-3 bg-natural-accent text-[#f5f5f0] text-[9px] uppercase tracking-widest font-sans font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                <span className="absolute top-3 left-3 bg-natural-accent text-[#f5f5f0] text-[9px] uppercase tracking-widest font-sans font-semibold px-2.5 py-1 rounded-full shadow-sm z-10">
                   {product.badge}
                 </span>
               )}
@@ -243,7 +351,25 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left: Representation */}
                   <div className="space-y-4">
-                    {renderProductFallbackGraphic(selectedProduct)}
+                    <div className="relative overflow-hidden rounded-[24px] aspect-[4/3] bg-stone-100 border border-natural-border shadow-2xs">
+                      {selectedProduct.image ? (
+                        <img
+                          src={selectedProduct.image}
+                          alt={selectedProduct.imageAlt}
+                          referrerPolicy="no-referrer"
+                          style={{ filter: getFilterStyle(photoFilter) }}
+                          className="w-full h-full object-cover rounded-[24px]"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            if (selectedProduct.fallbackImage) {
+                              e.currentTarget.src = selectedProduct.fallbackImage;
+                            }
+                          }}
+                        />
+                      ) : (
+                        renderProductFallbackGraphic(selectedProduct)
+                      )}
+                    </div>
                     
                     <div className="bg-natural-card-bg border border-natural-border rounded-2xl p-4 space-y-2">
                       <span className="text-[10px] uppercase tracking-wider text-[#8a8a7a] font-sans font-bold block">Materiales de Elaboración</span>
