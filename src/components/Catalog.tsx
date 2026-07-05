@@ -257,9 +257,35 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
                   style={{ filter: getFilterStyle(photoFilter) }}
                   className="w-full h-full object-cover rounded-[24px] transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => {
-                    e.currentTarget.onerror = null;
+                    const img = e.currentTarget;
+                    const currentSrc = img.src;
+                    try {
+                      const urlPath = new URL(currentSrc, window.location.origin).pathname;
+                      if (urlPath.startsWith("/images/")) {
+                        const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
+                        if (extMatch) {
+                          const ext = extMatch[1].toLowerCase();
+                          const extensions = ["png", "jpg", "jpeg", "webp"];
+                          const currentAttr = img.getAttribute("data-try-index");
+                          const currentIndex = currentAttr !== null 
+                            ? parseInt(currentAttr) 
+                            : extensions.indexOf(ext);
+                          
+                          const nextIndex = currentIndex + 1;
+                          if (nextIndex < extensions.length) {
+                            img.setAttribute("data-try-index", nextIndex.toString());
+                            const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
+                            img.src = `${baseName}.${extensions[nextIndex]}`;
+                            return;
+                          }
+                        }
+                      }
+                    } catch (err) {
+                      console.warn("Error resolving image fallback extension:", err);
+                    }
+                    img.onerror = null;
                     if (product.fallbackImage) {
-                      e.currentTarget.src = product.fallbackImage;
+                      img.src = product.fallbackImage;
                     }
                   }}
                 />
@@ -360,9 +386,35 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
                           style={{ filter: getFilterStyle(photoFilter) }}
                           className="w-full h-full object-cover rounded-[24px]"
                           onError={(e) => {
-                            e.currentTarget.onerror = null;
+                            const img = e.currentTarget;
+                            const currentSrc = img.src;
+                            try {
+                              const urlPath = new URL(currentSrc, window.location.origin).pathname;
+                              if (urlPath.startsWith("/images/")) {
+                                const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
+                                if (extMatch) {
+                                  const ext = extMatch[1].toLowerCase();
+                                  const extensions = ["png", "jpg", "jpeg", "webp"];
+                                  const currentAttr = img.getAttribute("data-try-index");
+                                  const currentIndex = currentAttr !== null 
+                                    ? parseInt(currentAttr) 
+                                    : extensions.indexOf(ext);
+                                  
+                                  const nextIndex = currentIndex + 1;
+                                  if (nextIndex < extensions.length) {
+                                    img.setAttribute("data-try-index", nextIndex.toString());
+                                    const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
+                                    img.src = `${baseName}.${extensions[nextIndex]}`;
+                                    return;
+                                  }
+                                }
+                              }
+                            } catch (err) {
+                              console.warn("Error resolving image fallback extension:", err);
+                            }
+                            img.onerror = null;
                             if (selectedProduct.fallbackImage) {
-                              e.currentTarget.src = selectedProduct.fallbackImage;
+                              img.src = selectedProduct.fallbackImage;
                             }
                           }}
                         />

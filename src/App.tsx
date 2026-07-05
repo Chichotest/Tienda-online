@@ -125,7 +125,18 @@ const ARTISAN_PRODUCTS: Product[] = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"coleccion" | "taller" | "regalos" | "retoque">("coleccion");
-  const [products, setProducts] = useState<Product[]>(ARTISAN_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() => {
+    return ARTISAN_PRODUCTS.map((prod) => {
+      const localImage = localStorage.getItem(`uploaded-image-${prod.id}`);
+      if (localImage) {
+        return {
+          ...prod,
+          image: localImage
+        };
+      }
+      return prod;
+    });
+  });
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -148,9 +159,10 @@ export default function App() {
             (productId === "brazalete_cuero" && prod.id === "pulsera_tierra") ||
             (productId === "taller_creativo" && prod.id === "pendientes_fantasia")
           ) {
+            const finalUrl = url.startsWith("data:") ? url : `${url}?t=${Date.now()}`;
             return {
               ...prod,
-              image: `${url}?t=${Date.now()}`
+              image: finalUrl
             };
           }
           return prod;

@@ -159,7 +159,20 @@ export default function RetouchStudio() {
   const [activeProduct, setActiveProduct] = useState<ProductRetouch>(RETOUCH_PRODUCTS[0]);
   
   // Custom uploaded images store (using product ID as key)
-  const [uploadedImages, setUploadedImages] = useState<Record<string, string>>({});
+  const [uploadedImages, setUploadedImages] = useState<Record<string, string>>(() => {
+    const saved: Record<string, string> = {};
+    RETOUCH_PRODUCTS.forEach((prod) => {
+      try {
+        const localData = localStorage.getItem(`uploaded-image-${prod.id}`);
+        if (localData) {
+          saved[prod.id] = localData;
+        }
+      } catch (e) {
+        console.warn("Could not read from localStorage on initialization:", e);
+      }
+    });
+    return saved;
+  });
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
@@ -246,38 +259,50 @@ export default function RetouchStudio() {
             // Compress image client-side to ensure small payload size (under 500kb)
             const compressedBase64 = await compressImage(originalBase64);
             
-            const response = await fetch("/api/upload-image", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                productId: activeProduct.id,
-                base64Data: compressedBase64
-              })
-            });
-
-            if (!response.ok) {
-              const errData = await response.json().catch(() => ({}));
-              throw new Error(errData.error || "Error al subir la imagen.");
+            // 1. Instantly save to local memory (localStorage)
+            try {
+              localStorage.setItem(`uploaded-image-${activeProduct.id}`, compressedBase64);
+            } catch (storageErr) {
+              console.warn("Could not save to localStorage (quota full or private window):", storageErr);
             }
 
-            const result = await response.json();
-
-            // Set state locally
+            // 2. Instantly update UI and dispatch events (completely offline/serverless compatible)
             setUploadedImages((prev) => ({
               ...prev,
               [activeProduct.id]: compressedBase64
             }));
 
-            // Notify rest of the app to reload Catalog/etc
             window.dispatchEvent(new CustomEvent("product-image-updated", {
-              detail: { productId: activeProduct.id, url: result.url }
+              detail: { productId: activeProduct.id, url: compressedBase64 }
             }));
 
+            // 3. Try to save on the server (works when running locally in development for export)
+            try {
+              const response = await fetch("/api/upload-image", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  productId: activeProduct.id,
+                  base64Data: compressedBase64
+                })
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                console.log("Successfully persisted image on developer workspace server:", result.url);
+              } else {
+                const text = await response.text();
+                console.warn("Server upload failed (expected on Vercel/Serverless):", response.status, text);
+              }
+            } catch (serverErr) {
+              console.warn("Server upload network error (expected on Vercel/Serverless):", serverErr);
+            }
+
           } catch (err: any) {
-            console.error("Upload error:", err);
-            setUploadError(err.message || "Error al guardar la imagen en el servidor.");
+            console.error("Upload process error:", err);
+            setUploadError(err.message || "Error al procesar la imagen.");
           } finally {
             setIsUploading(false);
           }

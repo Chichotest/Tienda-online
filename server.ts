@@ -335,18 +335,25 @@ app.post("/api/upload-image", (req, res) => {
   }
 
   try {
-    const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
-    let buffer;
+    let buffer: Buffer;
     let extension = "png"; // fallback por defecto
-    if (matches && matches.length === 3) {
-      buffer = Buffer.from(matches[2], "base64");
-      const mime = matches[1].toLowerCase();
-      if (mime.includes("jpeg") || mime.includes("jpg")) {
-        extension = "jpg";
-      } else if (mime.includes("webp")) {
-        extension = "webp";
-      } else if (mime.includes("png")) {
-        extension = "png";
+
+    if (base64Data.startsWith("data:")) {
+      const commaIndex = base64Data.indexOf(";base64,");
+      if (commaIndex !== -1) {
+        const mime = base64Data.substring(5, commaIndex).toLowerCase();
+        const base64Content = base64Data.substring(commaIndex + 8);
+        buffer = Buffer.from(base64Content, "base64");
+
+        if (mime.includes("jpeg") || mime.includes("jpg")) {
+          extension = "jpg";
+        } else if (mime.includes("webp")) {
+          extension = "webp";
+        } else if (mime.includes("png")) {
+          extension = "png";
+        }
+      } else {
+        buffer = Buffer.from(base64Data, "base64");
       }
     } else {
       buffer = Buffer.from(base64Data, "base64");
