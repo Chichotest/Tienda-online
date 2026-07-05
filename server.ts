@@ -305,44 +305,54 @@ app.post("/api/upload-image", (req, res) => {
     return res.status(400).json({ error: "Faltan datos de 'productId' o 'base64Data'." });
   }
 
-  let filename = "";
+  let baseName = "";
   switch (productId) {
     case "zapatillas_girasoles":
-      filename = "zapatillas_girasoles.png";
+      baseName = "zapatillas_girasoles";
       break;
     case "pulsera_tierra":
     case "brazalete_cuero":
-      filename = "brazalete_cuero.png";
+      baseName = "brazalete_cuero";
       break;
     case "pendientes_labios":
     case "labios_rojos":
-      filename = "labios_rojos.png";
+      baseName = "labios_rojos";
       break;
     case "pendientes_espinas":
     case "corazon_alambre":
-      filename = "corazon_alambre.png";
+      baseName = "corazon_alambre";
       break;
     case "pendientes_trisquel":
     case "trisquel_celta":
-      filename = "trisquel_celta.png";
+      baseName = "trisquel_celta";
       break;
     case "pendientes_fantasia":
     case "taller_creativo":
-      filename = "taller_creativo.png";
+      baseName = "taller_creativo";
       break;
     default:
       return res.status(400).json({ error: "Identificador de producto no reconocido." });
   }
 
   try {
-    const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
     let buffer;
+    let extension = "png"; // fallback por defecto
     if (matches && matches.length === 3) {
       buffer = Buffer.from(matches[2], "base64");
+      const mime = matches[1].toLowerCase();
+      if (mime.includes("jpeg") || mime.includes("jpg")) {
+        extension = "jpg";
+      } else if (mime.includes("webp")) {
+        extension = "webp";
+      } else if (mime.includes("png")) {
+        extension = "png";
+      }
     } else {
       buffer = Buffer.from(base64Data, "base64");
     }
 
+    const filename = `${baseName}.${extension}`;
     const publicImagesDir = path.join(process.cwd(), "public", "images");
     const distImagesDir = path.join(process.cwd(), "dist", "images");
 

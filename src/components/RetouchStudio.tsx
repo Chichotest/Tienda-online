@@ -194,6 +194,44 @@ export default function RetouchStudio() {
     setUploadError(null);
   }, [activeProduct]);
 
+  // Helper to compress image using canvas before uploading
+  const compressImage = (base64Str: string, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          // Compress to JPEG with 0.85 quality
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        } else {
+          resolve(base64Str);
+        }
+      };
+      img.onerror = () => {
+        resolve(base64Str);
+      };
+    });
+  };
+
   // Handle local file upload and save to server
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -203,8 +241,11 @@ export default function RetouchStudio() {
       const reader = new FileReader();
       reader.onload = async (uploadEvent) => {
         if (uploadEvent.target?.result) {
-          const base64Data = uploadEvent.target.result as string;
+          const originalBase64 = uploadEvent.target.result as string;
           try {
+            // Compress image client-side to ensure small payload size (under 500kb)
+            const compressedBase64 = await compressImage(originalBase64);
+            
             const response = await fetch("/api/upload-image", {
               method: "POST",
               headers: {
@@ -212,7 +253,7 @@ export default function RetouchStudio() {
               },
               body: JSON.stringify({
                 productId: activeProduct.id,
-                base64Data: base64Data
+                base64Data: compressedBase64
               })
             });
 
@@ -226,7 +267,7 @@ export default function RetouchStudio() {
             // Set state locally
             setUploadedImages((prev) => ({
               ...prev,
-              [activeProduct.id]: base64Data
+              [activeProduct.id]: compressedBase64
             }));
 
             // Notify rest of the app to reload Catalog/etc
