@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 
 interface ShoeVisualizerProps {
@@ -16,6 +16,16 @@ export default function ShoeVisualizer({
   customLettering,
   className = "",
 }: ShoeVisualizerProps) {
+  const [viewMode, setViewMode] = useState<"vector" | "real">("real");
+
+  useEffect(() => {
+    if (embroideryTheme === "girasoles") {
+      setViewMode("real");
+    } else {
+      setViewMode("vector");
+    }
+  }, [embroideryTheme]);
+
   // Map lace colors to beautiful hex values for rendering
   const getLaceHex = (color: string) => {
     const col = color.toLowerCase();
@@ -45,7 +55,7 @@ export default function ShoeVisualizer({
       {/* Floating Status Badges */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
         <span className="text-[10px] tracking-widest uppercase bg-stone-950 text-white font-medium px-2 py-0.5 rounded-full shadow-sm">
-          Vista previa interactiva
+          Vista previa {viewMode === "real" ? "Foto Real" : "Boceto 3D"}
         </span>
         {embroideryTheme !== "ninguno" && (
           <motion.span
@@ -58,13 +68,92 @@ export default function ShoeVisualizer({
         )}
       </div>
 
+      {/* View Mode Toggle */}
+      {embroideryTheme === "girasoles" && (
+        <div className="absolute top-4 right-4 z-20 flex bg-white/90 backdrop-blur-xs p-1 rounded-full border border-stone-200 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setViewMode("real")}
+            className={`px-3 py-1.5 text-[10px] font-sans font-bold tracking-wider uppercase rounded-full transition-all cursor-pointer ${
+              viewMode === "real"
+                ? "bg-stone-900 text-white shadow-xs"
+                : "text-stone-500 hover:text-stone-900"
+            }`}
+          >
+            Foto Real
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("vector")}
+            className={`px-3 py-1.5 text-[10px] font-sans font-bold tracking-wider uppercase rounded-full transition-all cursor-pointer ${
+              viewMode === "vector"
+                ? "bg-stone-900 text-white shadow-xs"
+                : "text-stone-500 hover:text-stone-900"
+            }`}
+          >
+            Boceto 3D
+          </button>
+        </div>
+      )}
+
       <div className="w-full max-w-sm md:max-w-md aspect-square flex items-center justify-center relative">
-        <svg
-          viewBox="0 0 500 500"
-          className="w-full h-full drop-shadow-xl"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        {viewMode === "real" ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full h-full relative flex items-center justify-center p-2"
+          >
+            <img
+              src="/images/zapatillas_girasoles.jpeg"
+              alt="Zapatillas de Girasoles"
+              className="w-full h-full object-cover rounded-[24px] shadow-sm transition-transform duration-500 hover:scale-[1.02]"
+              onError={(e) => {
+                const img = e.currentTarget;
+                const currentSrc = img.src;
+                try {
+                  const urlPath = new URL(currentSrc, window.location.origin).pathname;
+                  if (urlPath.startsWith("/images/")) {
+                    const extensions = ["jpeg", "jpg", "png", "webp"];
+                    const attemptAttr = img.getAttribute("data-attempt");
+                    const attempt = attemptAttr ? parseInt(attemptAttr) : 0;
+                    
+                    if (attempt < extensions.length) {
+                      img.setAttribute("data-attempt", (attempt + 1).toString());
+                      const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
+                      const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
+                      const currentExt = extMatch ? extMatch[1].toLowerCase() : "";
+                      
+                      let targetExt = extensions[attempt];
+                      if (targetExt === currentExt) {
+                        const nextIdx = (attempt + 1) % extensions.length;
+                        targetExt = extensions[nextIdx];
+                        img.setAttribute("data-attempt", (attempt + 2).toString());
+                      }
+                      
+                      img.src = `${baseName}.${targetExt}`;
+                      return;
+                    }
+                  }
+                } catch (err) {
+                  console.warn("Error resolving image fallback extension:", err);
+                }
+                img.onerror = null;
+                img.src = "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&h=450&q=80";
+              }}
+            />
+            {customLettering && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xs border border-stone-200/60 shadow-md px-4 py-2 rounded-full text-[10px] font-mono tracking-widest text-stone-700 font-bold uppercase whitespace-nowrap">
+                Personalizado: "{customLettering}"
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <svg
+            viewBox="0 0 500 500"
+            className="w-full h-full drop-shadow-xl"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
           {/* DEFINITIONS FOR GRADIENTS AND PATTERNS */}
           <defs>
             <linearGradient id="soleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -541,6 +630,7 @@ export default function ShoeVisualizer({
             )}
           </g>
         </svg>
+        )}
       </div>
     </div>
   );

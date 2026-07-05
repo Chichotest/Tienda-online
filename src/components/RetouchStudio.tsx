@@ -45,7 +45,7 @@ const RETOUCH_PRODUCTS: ProductRetouch[] = [
     category: "zapatillas",
     originalDescription: "Zapatillas de lona blanca con bordado artesanal de girasol tridimensional, flores moradas y lazo de organza rojo.",
     watermarkToRemove: "Fondo verde plano y sombra de recorte dura.",
-    rawFileName: "zapatillas_girasoles.png",
+    rawFileName: "zapatillas_girasoles.jpeg",
     recommendedIdea: {
       title: "Atmósfera de Taller Rústico de Costura",
       description: "Retiraremos el fondo verde de estudio para colocar las zapatillas sobre un tablero de roble envejecido o mantelería de lino crudo. Añadiremos elementos desenfocados en los bordes como hilos de colores Mouliné y agujas para acentuar el origen textil. Proyectaremos luz cálida de tarde entrando por una ventana lateral.",

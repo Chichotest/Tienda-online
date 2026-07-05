@@ -262,22 +262,25 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
                     try {
                       const urlPath = new URL(currentSrc, window.location.origin).pathname;
                       if (urlPath.startsWith("/images/")) {
-                        const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
-                        if (extMatch) {
-                          const ext = extMatch[1].toLowerCase();
-                          const extensions = ["png", "jpg", "jpeg", "webp"];
-                          const currentAttr = img.getAttribute("data-try-index");
-                          const currentIndex = currentAttr !== null 
-                            ? parseInt(currentAttr) 
-                            : extensions.indexOf(ext);
+                        const extensions = ["jpeg", "jpg", "png", "webp"];
+                        const attemptAttr = img.getAttribute("data-attempt");
+                        const attempt = attemptAttr ? parseInt(attemptAttr) : 0;
+                        
+                        if (attempt < extensions.length) {
+                          img.setAttribute("data-attempt", (attempt + 1).toString());
+                          const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
+                          const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
+                          const currentExt = extMatch ? extMatch[1].toLowerCase() : "";
                           
-                          const nextIndex = currentIndex + 1;
-                          if (nextIndex < extensions.length) {
-                            img.setAttribute("data-try-index", nextIndex.toString());
-                            const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
-                            img.src = `${baseName}.${extensions[nextIndex]}`;
-                            return;
+                          let targetExt = extensions[attempt];
+                          if (targetExt === currentExt) {
+                            const nextIdx = (attempt + 1) % extensions.length;
+                            targetExt = extensions[nextIdx];
+                            img.setAttribute("data-attempt", (attempt + 2).toString());
                           }
+                          
+                          img.src = `${baseName}.${targetExt}`;
+                          return;
                         }
                       }
                     } catch (err) {
@@ -391,22 +394,25 @@ export default function Catalog({ products, onAddToCart }: CatalogProps) {
                             try {
                               const urlPath = new URL(currentSrc, window.location.origin).pathname;
                               if (urlPath.startsWith("/images/")) {
-                                const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
-                                if (extMatch) {
-                                  const ext = extMatch[1].toLowerCase();
-                                  const extensions = ["png", "jpg", "jpeg", "webp"];
-                                  const currentAttr = img.getAttribute("data-try-index");
-                                  const currentIndex = currentAttr !== null 
-                                    ? parseInt(currentAttr) 
-                                    : extensions.indexOf(ext);
+                                const extensions = ["jpeg", "jpg", "png", "webp"];
+                                const attemptAttr = img.getAttribute("data-attempt");
+                                const attempt = attemptAttr ? parseInt(attemptAttr) : 0;
+                                
+                                if (attempt < extensions.length) {
+                                  img.setAttribute("data-attempt", (attempt + 1).toString());
+                                  const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
+                                  const extMatch = urlPath.match(/\.([a-zA-Z]+)$/);
+                                  const currentExt = extMatch ? extMatch[1].toLowerCase() : "";
                                   
-                                  const nextIndex = currentIndex + 1;
-                                  if (nextIndex < extensions.length) {
-                                    img.setAttribute("data-try-index", nextIndex.toString());
-                                    const baseName = urlPath.substring(0, urlPath.lastIndexOf("."));
-                                    img.src = `${baseName}.${extensions[nextIndex]}`;
-                                    return;
+                                  let targetExt = extensions[attempt];
+                                  if (targetExt === currentExt) {
+                                    const nextIdx = (attempt + 1) % extensions.length;
+                                    targetExt = extensions[nextIdx];
+                                    img.setAttribute("data-attempt", (attempt + 2).toString());
                                   }
+                                  
+                                  img.src = `${baseName}.${targetExt}`;
+                                  return;
                                 }
                               }
                             } catch (err) {

@@ -36,7 +36,7 @@ const ARTISAN_PRODUCTS: Product[] = [
     features: ["Bordado tridimensional", "Talla a elegir (36-44)", "Iniciales personalizadas en hilo de oro", "Lazada de cinta organza roja"],
     isCustomizable: true,
     imageAlt: "Zapatillas altas blancas bordadas a mano con girasoles tridimensionales y cordón de cinta de organza roja.",
-    image: "/images/zapatillas_girasoles.png",
+    image: "/images/zapatillas_girasoles.jpeg",
     fallbackImage: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&h=450&q=80",
     colorAccent: "#fef3c7", // soft light gold yellow background
     badge: "Más Vendido",
